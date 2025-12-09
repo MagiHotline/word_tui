@@ -2,6 +2,7 @@
 
 use std::default;
 
+use ratatui::style::palette::tailwind;
 use reqwest::*;
 use chrono::{Datelike};
 
@@ -9,7 +10,19 @@ use chrono::{Datelike};
 pub enum Color {
     Green,
     Yellow,
-    #[default] Gray
+    Gray,
+    #[default] Blank
+}
+
+impl Into<ratatui::style::Color> for Color {
+    fn into(self) -> ratatui::style::Color {
+        match self {
+            Color::Blank => tailwind::NEUTRAL.c700,
+            Color::Green => tailwind::GREEN.c600,
+            Color::Gray =>  tailwind::GRAY.c500,
+            Color::Yellow => tailwind::YELLOW.c400
+        }
+    }
 }
 
 #[derive(Debug, Default, Copy, Clone)]

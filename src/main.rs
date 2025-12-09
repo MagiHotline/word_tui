@@ -5,6 +5,8 @@ use ratatui::{DefaultTerminal, Frame};
 
 mod app;
 
+use app::App;
+
 fn main() -> Result<()> {
     color_eyre::install()?;
     let terminal = ratatui::init();
