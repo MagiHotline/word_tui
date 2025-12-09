@@ -1,63 +1,73 @@
-use color_eyre::Result;
+use color_eyre::{Result, owo_colors::{AnsiColors, OwoColorize}};
 use ratatui::{
     DefaultTerminal, Frame, crossterm::event::{self, Event, KeyCode, KeyEventKind},
-    layout::{Constraint, Layout, Rect}, style::{Color, Style, Stylize, palette::tailwind},
+    layout::{Constraint, Layout, Rect}, style::{Style, palette::tailwind},
     text::Text, widgets::{
-        Block, BorderType, Cell, Paragraph, Row, Table, TableState,
+        Block, BorderType, Paragraph, StatefulWidget, Widget
     }
 };
-use unicode_width::UnicodeWidthChar;
 use wordle_tui::WordleBox;
 
-const INFO_TEXT: &str = "(Esc) quit | (←) move left | (→) move right";
-
-const ITEM_HEIGHT: usize = 6;
-
-struct TableColors {
-    normal_row_color: Color,
-    alt_row_color: Color,
-    footer_border_color: Color,
-}
-
-impl TableColors {
-    const fn new(color: &tailwind::Palette) -> Self {
-        Self {
-            // Let's insert the REAL colors we want to implement
-            // One for BLANK, for GREEN, for YELLOW and GRAY of the wordle_tui Color enumerator
-            normal_row_color: tailwind::SLATE.c950,
-            alt_row_color: tailwind::SLATE.c900,
-            footer_border_color: color.c400,
-        }
-    }
-}
-
+const INFO_TEXT: &str = "(Esc) quit";
 
 pub struct App {
-    state: TableState,
-    cell_size: usize,
-    input: [[WordleBox; 5]; 6]
+    content: [[WordleBox; 5]; 6]
 }
 
 impl Default for App {
     fn default() -> Self {
         Self {
-            state: TableState::default().with_selected(0),
-            input: [[WordleBox::new('a', wordle_tui::Color::Blank); 5]; 6],
-            cell_size: 5,
+            content: [[WordleBox::new('a', wordle_tui::Color::Gray); 5]; 6]
         }
     }
 }
 
+pub struct Grid {
+    cell_size: usize,
+    cols: usize,
+    rows: usize,
+}
+
+impl Default for Grid {
+    fn default() -> Self {
+        Self {
+               cell_size: 1,
+               cols: 5,
+               rows: 6 }
+        }
+}
+
+impl StatefulWidget for Grid {
+
+    type State = [[WordleBox; 5]; 6];
+
+    /// Area is the WordleBox area, state is the Wordlebox input inserted by the User
+    fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State)
+    {
+            let col_constraints = (0..self.cols).map(|_| Constraint::Length(self.cell_size as u16 + 4));
+            let row_constraints = (0..self.rows).map(|_| Constraint::Length(self.cell_size as u16 + 2));
+            let horizontal = Layout::horizontal(col_constraints).spacing(1);
+            let vertical = Layout::vertical(row_constraints);
+
+            let rows = vertical.split(area);
+            for (row_index, &row_area) in rows.iter().enumerate() {
+                for (col_index, &col_area) in horizontal.split(row_area).to_vec().iter().enumerate() {
+
+                    let current_cell = state[row_index][col_index];
+
+                    Paragraph::new(Text::from(format!("{}", current_cell.letter)).style(Style::new().fg(current_cell.color.into())))
+                        .block(Block::bordered())
+                        .centered()
+                        .style(Style::new().fg(current_cell.color.into()))
+                        .render(col_area, buf);
+                }
+            }
+
+
+    }
+}
+
 impl App {
-
-    pub fn next_column(&mut self) {
-        self.state.select_next_column();
-    }
-
-    pub fn previous_column(&mut self) {
-        self.state.select_previous_column();
-    }
-
 
     pub fn run(mut self, mut terminal: DefaultTerminal) -> Result<()> {
         loop {
@@ -66,8 +76,6 @@ impl App {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
-                        KeyCode::Char('l') | KeyCode::Right => self.next_column(),
-                        KeyCode::Char('h') | KeyCode::Left => self.previous_column(),
                         _ => {}
                     }
                 }
@@ -77,54 +85,36 @@ impl App {
 
 
     fn draw(&mut self, frame: &mut Frame) {
-         let horizontal = &Layout::horizontal([Constraint::Percentage(33),
-                                                                   Constraint::Percentage(33),
-                                                                   Constraint::Percentage(33)])
+
+        let grid = Grid::default();
+
+         let horizontal = &Layout::horizontal([Constraint::Fill(1),
+                                                                   Constraint::Max((grid.cell_size as u16 + 5) * 5),
+                                                                   Constraint::Fill(1)])
                                          ;
          let rects = horizontal.split(frame.area());
 
-         let inner_layout = &Layout::vertical([Constraint::Percentage(20),
-                                                                    Constraint::Percentage(60),
-                                                                    Constraint::Length(3),
-                                                                    Constraint::Percentage(20)])
+         let inner_layout = &Layout::vertical([Constraint::Fill(1),
+                                                                    Constraint::Min((grid.cell_size as u16 + 2) * 6),
+                                                                    Constraint::Length(4),
+                                                                    Constraint::Fill(1)])
         .split(rects[1]);
 
-         self.render_table(frame, inner_layout[1]);
+
+         frame.render_stateful_widget(grid, inner_layout[1], &mut self.content);
          self.render_footer(frame, inner_layout[2]);
-     }
-
-
-     fn render_table(&mut self, frame: &mut Frame, area: Rect) {
-
-        let rows = self.input.map(|wordlebox|  {
-                wordlebox.map(|w| {
-                    return Cell::from(Text::from(format!("{}", w.letter)))
-                        .style(Style::new().bg(w.color.into()).fg(tailwind::WHITE));
-                }).into_iter().collect::<Row>().height(area.height / 6)
-        });
-
-        let t = Table::new(
-            rows,
-            [
-                Constraint::Length(area.width / 5); 5
-            ]
-        )
-        .bg(tailwind::BLACK);
-
-        frame.render_stateful_widget(t, area, &mut self.state);
      }
 
      fn render_footer(&self, frame: &mut Frame, area: Rect) {
          let info_footer = Paragraph::new(Text::from(INFO_TEXT))
+             .wrap(ratatui::widgets::Wrap { trim: false })
              .style(
                  Style::new()
                      .fg(tailwind::WHITE)
-                     .bg(tailwind::BLACK),
              )
              .centered()
              .block(
                  Block::bordered()
-                     .border_type(BorderType::Double)
                      .border_style(Style::new().fg(tailwind::WHITE)),
              );
          frame.render_widget(info_footer, area);

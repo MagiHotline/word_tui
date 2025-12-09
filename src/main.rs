@@ -1,4 +1,3 @@
-use wordle_tui::{check_word, get_daily_word, Color};
 use color_eyre::Result;
 use crossterm::event::{self, Event};
 use ratatui::{DefaultTerminal, Frame};
