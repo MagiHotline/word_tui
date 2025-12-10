@@ -74,7 +74,9 @@ impl WordleGrid {
 
     }
 
-    pub fn send_word(&mut self, solution : &str) {
+    pub fn send_word(&mut self, solution : &str) -> bool {
+
+        let mut has_won = false;
 
         // Cannot send word if its not long five characters
         if self.first_free.1 == 5 {
@@ -91,9 +93,11 @@ impl WordleGrid {
             self.first_free.1 = 0;
 
             if checked_word.iter().all(|&c| c.color == Color::Green) {
-
+                has_won = true;
             }
         }
+
+        has_won
     }
 }
 

@@ -8,10 +8,11 @@ use ratatui::{
 };
 use wordle_tui::{WordleGrid, get_daily_word};
 
-const INFO_TEXT: &str = "(Esc) quit";
-
+/// Struct for the main data for the App.
 pub struct App {
     solution: String,
+    has_won: bool,
+    text_box: String,
     content: WordleGrid
 }
 
@@ -19,11 +20,17 @@ impl Default for App {
     fn default() -> Self {
         Self {
             solution: String::new(),
+            has_won: false,
+            text_box: String::from("(Esc) quit"),
             content: WordleGrid::default()
         }
     }
 }
 
+/// Struct for the grid widget.
+///     - cell_size: size of the single cell
+///     - cols: size of the columns
+///     - rows: size of the rows
 pub struct Grid {
     cell_size: usize,
     cols: usize,
@@ -44,30 +51,30 @@ impl StatefulWidget for Grid {
 
     type State = WordleGrid;
 
-    /// Area is the WordleBox area, state is the Wordlebox input inserted by the User
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State)
     {
-            let col_constraints = (0..self.cols).map(|_| Constraint::Length(self.cell_size as u16 + 4));
-            let row_constraints = (0..self.rows).map(|_| Constraint::Length(self.cell_size as u16 + 2));
-            let horizontal = Layout::horizontal(col_constraints).spacing(1);
-            let vertical = Layout::vertical(row_constraints);
+        // Define the contraints for every cell
+        let col_constraints = (0..self.cols).map(|_| Constraint::Length(self.cell_size as u16 + 4));
+        let row_constraints = (0..self.rows).map(|_| Constraint::Length(self.cell_size as u16 + 2));
 
-            let rows = vertical.split(area);
-            for (row_index, &row_area) in rows.iter().enumerate() {
-                for (col_index, &col_area) in horizontal.split(row_area).to_vec().iter().enumerate() {
+        let horizontal = Layout::horizontal(col_constraints).spacing(1);
+        let vertical = Layout::vertical(row_constraints);
 
-                    let current_cell = state.grid[row_index][col_index];
+        let rows = vertical.split(area);
+        for (row_index, &row_area) in rows.iter().enumerate() {
+            for (col_index, &col_area) in horizontal.split(row_area).to_vec().iter().enumerate() {
 
-                    Paragraph::new(Text::from(format!("{}", current_cell.letter
-                            .unwrap_or(' ')))
-                            .style(Style::new().fg(tailwind::WHITE)))
-                        .block(Block::bordered())
-                        .centered()
-                        .style(Style::new().fg(current_cell.color.into()))
-                        .render(col_area, buf);
-                }
+                let current_cell = state.grid[row_index][col_index];
+
+                Paragraph::new(Text::from(format!("{}", current_cell.letter
+                        .unwrap_or(' ')))
+                        .style(Style::new().fg(tailwind::WHITE)))
+                    .block(Block::bordered())
+                    .centered()
+                    .style(Style::new().fg(current_cell.color.into()))
+                    .render(col_area, buf);
             }
-
+        }
 
     }
 }
@@ -83,12 +90,21 @@ impl App {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
-                        KeyCode::Enter => WordleGrid::send_word(&mut self.content, &self.solution),
-                        KeyCode::Backspace => WordleGrid::remove_char(&mut self.content),
+                        KeyCode::Enter =>
+                            {
+                                if WordleGrid::send_word(&mut self.content, &self.solution) && !self.has_won
+                                {
+                                    self.text_box = format!("You won!");
+                                    self.has_won = true;
+                                }
+                            }
+                        KeyCode::Backspace => if !self.has_won { WordleGrid::remove_char(&mut self.content)},
                         KeyCode::Esc => return Ok(()),
                         KeyCode::Char(c) => {
-                            if !c.is_ascii_alphabetic() { continue; }
-                            self.content.append_char(c);
+                            if !self.has_won {
+                                if !c.is_ascii_alphabetic() { continue; }
+                                self.content.append_char(c);
+                            }
                         }
                         _ => {}
                     }
@@ -121,7 +137,7 @@ impl App {
      }
 
      fn render_footer(&self, frame: &mut Frame, area: Rect) {
-         let info_footer = Paragraph::new(INFO_TEXT)
+         let info_footer = Paragraph::new(self.text_box.to_owned())
              .wrap(ratatui::widgets::Wrap { trim: false })
              .style(
                  Style::new()
