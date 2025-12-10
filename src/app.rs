@@ -1,4 +1,4 @@
-use color_eyre::Result;
+use color_eyre::{Result};
 use ratatui::{
     DefaultTerminal, Frame, crossterm::event::{self, Event, KeyCode, KeyEventKind},
     layout::{Constraint, Layout, Rect}, style::{Style, palette::tailwind},
@@ -6,6 +6,7 @@ use ratatui::{
         Block, Paragraph, StatefulWidget, Widget
     }
 };
+use tui_big_text::{BigText, PixelSize};
 use wordle_tui::{WordleGrid, get_daily_word};
 
 /// Struct for the main data for the App.
@@ -126,15 +127,31 @@ impl App {
 
          let inner_layout = &Layout::vertical(
              [Constraint::Fill(1),
+                         Constraint::Length(4),
                          Constraint::Min((grid.cell_size as u16 + 2) * 6),
                          Constraint::Length(4),
                          Constraint::Fill(1)])
         .split(rects[1]);
 
-
-         frame.render_stateful_widget(grid, inner_layout[1], &mut self.content);
-         self.render_footer(frame, inner_layout[2]);
+         self.render_header(frame, inner_layout[1]);
+         frame.render_stateful_widget(grid, inner_layout[2], &mut self.content);
+         self.render_footer(frame, inner_layout[3]);
      }
+
+
+     fn render_header(&self, frame: &mut Frame, area: Rect) {
+         let header = BigText::builder()
+                 .pixel_size(PixelSize::Quadrant)
+                 .style(Style::new().fg(tailwind::WHITE))
+                 .centered()
+                 .lines(vec![
+                     "Wordle".into()
+                 ])
+                 .build();
+
+        frame.render_widget(header, area);
+     }
+
 
      fn render_footer(&self, frame: &mut Frame, area: Rect) {
          let info_footer = Paragraph::new(self.text_box.to_owned())
