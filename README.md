@@ -1,4 +1,4 @@
-# Wordle TUI
+# WordTUI
 
 ![Rust](https://img.shields.io/badge/built_with-Rust-dca282.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)

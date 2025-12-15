@@ -1,5 +1,5 @@
 [package]
-name = "wordle_tui"
+name = "wordtui"
 version = "0.1.0"
 authors = ["Paolo Imbriani <imbriani.paolo@hotmail.com>"]
 license = "MIT"
