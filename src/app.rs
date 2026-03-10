@@ -64,7 +64,7 @@ impl StatefulWidget for Grid {
 
                 Paragraph::new(
                     Text::from(format!("{}", current_cell.letter.unwrap_or(' ').to_uppercase()))
-                        .style(Style::new().fg(Color::White).bold()),
+                        .style(Style::new().fg(current_cell.color.into()).bold()),
                 )
                 .block(Block::bordered().border_type(BorderType::Rounded))
                 .centered()

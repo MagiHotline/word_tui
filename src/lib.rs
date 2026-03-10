@@ -2,6 +2,7 @@
 use chrono::Datelike;
 use reqwest::*;
 
+/// Color used for Wordle Boxes
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum Color {
     Green,
@@ -11,6 +12,7 @@ pub enum Color {
     Blank,
 }
 
+/// Transforms a Color into a ratatui
 impl Into<ratatui::style::Color> for Color {
     fn into(self) -> ratatui::style::Color {
         match self {
@@ -22,6 +24,7 @@ impl Into<ratatui::style::Color> for Color {
     }
 }
 
+/// Define data for Wordle Boxes
 #[derive(Debug, Default, Copy, Clone)]
 pub struct WordleBox {
     pub letter: Option<char>,
@@ -43,6 +46,7 @@ impl WordleBox {
     }
 }
 
+/// Define the whole Wordle Grid 5x6
 pub struct WordleGrid {
     pub grid: [[WordleBox; 5]; 6],
     first_free: (usize, usize),
