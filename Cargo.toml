@@ -1,9 +1,12 @@
 [package]
 name = "wordtui"
+description = "WordTUI is a terminal-based implementation of the popular word-guessing game (by New York Times)"
 version = "0.1.0"
 authors = ["Paolo Imbriani <imbriani.paolo@hotmail.com>"]
 license = "MIT"
 edition = "2024"
+readme = "README.md"
+repository = "https://github.com/MagiHotline/word_tui"
 
 [dependencies]
 chrono = "0.4.42"
