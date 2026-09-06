@@ -4,7 +4,9 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
 
-**Wordle TUI** is a terminal-based implementation of the popular word-guessing game (by New York Times), written in Rust and using the Ratatui crate to create the Terminal User Interface.
+![screen](assets/screen.png)
+
+**Wordle TUI** is a terminal-based implementation of the popular word-guessing game (by New York Times), written in Rust and using the Ratatui crate to create the Terminal User Interface. The guessing of the day are the official ones!
 
 ### Prerequisites
 
@@ -12,5 +14,5 @@ You need to have **Rust** and **Cargo** installed on your machine. If you haven'
 
 ## What was used
 
-* **Language:** [Rust](https://www.rust-lang.org/)
-* **TUI Library:** [Ratatui](https://github.com/ratatui-org/ratatui)
+- **Language:** [Rust](https://www.rust-lang.org/)
+- **TUI Library:** [Ratatui](https://github.com/ratatui-org/ratatui)

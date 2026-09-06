@@ -1,9 +1,14 @@
 use color_eyre::Result;
 use ratatui::{
-    DefaultTerminal, Frame, crossterm::event::{self, Event, KeyCode, KeyEventKind}, layout::{Constraint, Layout, Rect}, style::{Color, Style, Stylize}, text::Text, widgets::{Block, BorderType, Paragraph, StatefulWidget, Widget}
+    DefaultTerminal, Frame,
+    crossterm::event::{self, Event, KeyCode, KeyEventKind},
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Style, Stylize},
+    text::Text,
+    widgets::{Block, BorderType, Paragraph, StatefulWidget, Widget},
 };
 use tui_big_text::{BigText, PixelSize};
-use wordtui::{get_daily_word, WordleGrid};
+use wordtui::{WordleGrid, get_daily_word};
 
 /// Struct for the main data for the App.
 pub struct App {
@@ -49,10 +54,8 @@ impl StatefulWidget for Grid {
 
     fn render(self, area: Rect, buf: &mut ratatui::prelude::Buffer, state: &mut Self::State) {
         // Define the contraints for every cell
-        let col_constraints =
-            (0..self.cols).map(|_| Constraint::Length(self.cell_size as u16 + 4));
-        let row_constraints =
-            (0..self.rows).map(|_| Constraint::Length(self.cell_size as u16 + 2));
+        let col_constraints = (0..self.cols).map(|_| Constraint::Length(self.cell_size as u16 + 4));
+        let row_constraints = (0..self.rows).map(|_| Constraint::Length(self.cell_size as u16 + 2));
 
         let horizontal = Layout::horizontal(col_constraints).spacing(1);
         let vertical = Layout::vertical(row_constraints);
@@ -63,8 +66,11 @@ impl StatefulWidget for Grid {
                 let current_cell = state.grid[row_index][col_index];
 
                 Paragraph::new(
-                    Text::from(format!("{}", current_cell.letter.unwrap_or(' ').to_uppercase()))
-                        .style(Style::new().fg(current_cell.color.into()).bold()),
+                    Text::from(format!(
+                        "{}",
+                        current_cell.letter.unwrap_or(' ').to_uppercase()
+                    ))
+                    .style(Style::new().fg(current_cell.color.into()).bold()),
                 )
                 .block(Block::bordered().border_type(BorderType::Rounded))
                 .centered()
@@ -150,14 +156,11 @@ impl App {
     }
 
     fn render_footer(&self, frame: &mut Frame, area: Rect) {
-        let info_footer =
-            Paragraph::new(self.text_box.to_owned())
+        let info_footer = Paragraph::new(self.text_box.to_owned())
             .wrap(ratatui::widgets::Wrap { trim: false })
             .style(Style::new().fg(Color::White))
             .centered()
-            .block(
-                Block::bordered().border_style(Style::new().fg(Color::White)),
-            );
+            .block(Block::bordered().border_style(Style::new().fg(Color::White)));
         frame.render_widget(info_footer, area);
     }
 }
